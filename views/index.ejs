@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Message Board</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/jquery/jquery.min.js"></script>
+    <script>
+        var socket = io.connect();
+    </script>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+
+        .post {
+            padding: 10px;
+            border: 1px solid #aaa;
+            margin-bottom: 20px;
+            width: 47%;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .post p {
+            margin: 5px;
+        }
+
+        .comment_form p {
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .comments {
+            padding: 10px 0;
+        }
+
+        .comments div {
+            margin-bottom: 10px;
+            border: 1px solid #aaa;
+        }
+
+        .comments div:last-child {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="form">
+        <h1>The Dojo Message Board</h1>
+        <form action="" id="new_post">
+            <p>Name: <input type="text" name="post_name" id="post_name" placeholder="Name"></p>
+            <p>Post:</p>
+            <p><textarea name="post_content" cols="30" rows="10" id="post_content" placeholder="Post"></textarea></p>
+            <p><button type="submit">Post Message</button></p>
+        </form>
+    </div>
+    <div class="posts">
+        <h1>Posts</h1>
+        <% if ( typeof(posts) != 'undefined' ) { %>
+            <% for ( i in posts ) { %>
+                <div class="post post_<%= posts[i]._id %>">
+                    <p>Name: <strong><%= posts[i].author %></strong></p><p>Message: <%= posts[i].content %></p>
+                    <div class="comments">
+                        <% if (posts[i]._comments) { %>
+                            <% for (var x = 0; x < posts[i]._comments.length; x++ ) { %>
+                                <div>
+                                    <p>Name: <strong><%= posts[i]._comments[x].author %></strong></p>
+                                    <p>Message: <%= posts[i]._comments[x].content %></p>
+                                </div>
+                            <% } %>
+                        <% } %>
+                    </div>
+                    <form action="" class="comment_form" data-post-id="<%= posts[i]._id %>" onsubmit="return false;">
+                        <p><strong>Leave a comment:</strong></p>
+                        <p><input type="text" name="comment_name" class="comment_name" placeholder="Name"></p>
+                        <p><input type="text" name="comment_content" class="comment_content" placeholder="Comment"></input></p>
+                        <p><button type="submit">Post Message</button></p>
+                    </form>
+                </div>
+            <% } %>
+        <% } %>
+    </div>
+    <script>
+        $('#new_post').on('submit', function (e) {
+            e.preventDefault();
+            var form_data = {
+                name: $('#post_name').val(),
+                content: $('#post_content').val()
+            }
+            // console.log('Sending new post to server.')
+            $('#post_name').val('');
+            $('#post_content').val('');
+            socket.emit("form_submit", {form_data: form_data});
+        });
+
+        $(document).on('click', '.comment_form button', function (e) {
+            var self = e.target.parentNode.parentNode;
+            var post_id = $(self).attr('data-post-id');
+            var comment_data = {
+                post_id: post_id,
+                name: $(self).find('.comment_name').val(),
+                content: $(self).find('.comment_content').val()
+            }
+            $(self).find('.comment_name').val('');
+            $(self).find('.comment_content').val('');
+            socket.emit("comment_submit", comment_data);
+        });
+
+        socket.on('form_response', function (data) {
+            console.log(data);
+            $('.posts').append(
+                    '<div class="post post_'+data._id+'"><p>Name: <strong>' + data.author + '</strong></p><p>Message: ' +
+                    data.content + '</p><div class="comments"></div></div>'
+            );
+            $('.post:last-child').append(
+                    '<form action="" class="comment_form" data-post-id="' +
+                    data._id + '" onsubmit="return false;"><p><strong>Leave a comment:</strong></p><p><input type="text" name="comment_name"' +
+                    'class="comment_name" placeholder="Name"></p><p><input type="text" name="comment_content" ' +
+                    'class="comment_content" placeholder="Comment"></p><p><button type="submit">Post Message' +
+                    '</button></p> </form>'
+            );
+        });
+
+        socket.on('comment_response', function (data) {
+            var target = '.post_' + data.post_id + ' .comments';
+            $(target).append('<div class="comment"><p>Name: <strong>'+data.name+'</strong></p><p>Message: '+data.content+'</p></div>');
+        });
+
+        socket.on('errormsg', function (error) {
+            window.alert(error);
+        });
+    </script>
+</body>
+</html>

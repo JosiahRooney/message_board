@@ -1,0 +1,28 @@
+{
+  "name": "message_board",
+  "version": "0.0.1",
+  "description": "A message board with comments",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JosiahRooney/message_board.git"
+  },
+  "author": "Josiah Rooney",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/JosiahRooney/message_board/issues"
+  },
+  "homepage": "https://github.com/JosiahRooney/message_board#readme",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "ejs": "^2.4.2",
+    "express": "^4.14.0",
+    "jquery": "^3.1.0",
+    "mongodb": "^2.2.1",
+    "mongoose": "^4.5.4",
+    "socket.io": "^1.4.8"
+  }
+}
